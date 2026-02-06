@@ -1,0 +1,28 @@
+# Environment
+.env
+
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Docker volumes
+postgres-data/
+openclaw-data/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+tmp/
+temp/

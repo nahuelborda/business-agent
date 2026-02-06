@@ -1,0 +1,40 @@
+{
+  "meta": {
+    "note": "Business Agent - AI-powered business automation"
+  },
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-sonnet-4-5",
+        "fallbacks": ["anthropic/claude-opus-4-5"]
+      },
+      "workspace": "/workspace",
+      "maxConcurrent": 4,
+      "subagents": {
+        "maxConcurrent": 8
+      }
+    }
+  },
+  "messages": {
+    "messagePrefix": "[Business Agent]",
+    "ackReactionScope": "group-mentions"
+  },
+  "channels": {
+    "whatsapp": {
+      "accounts": {
+        "default": {
+          "name": "Business Agent",
+          "messagePrefix": "[Business Agent]",
+          "dmPolicy": "open",
+          "groupPolicy": "none",
+          "debounceMs": 0
+        }
+      },
+      "dmPolicy": "open",
+      "mediaMaxMb": 50
+    }
+  },
+  "canvasHost": {
+    "liveReload": true
+  }
+}

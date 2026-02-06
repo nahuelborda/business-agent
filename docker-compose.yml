@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:15-alpine
+    container_name: business-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: business_db
+      POSTGRES_USER: business
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-business123}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - business-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U business -d business_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Backend API
+  backend:
+    build: ./backend
+    container_name: business-backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://business:${POSTGRES_PASSWORD:-business123}@postgres:5432/business_db
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+    ports:
+      - "3000:3000"
+    networks:
+      - business-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # OpenClaw Agent
+  openclaw:
+    image: openclaw/openclaw:latest
+    container_name: business-openclaw
+    restart: unless-stopped
+    environment:
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      OPENCLAW_PORT: 18790
+      BACKEND_API_URL: http://backend:3000
+    volumes:
+      - ./openclaw/config.json:/root/.openclaw/openclaw.json
+      - ./openclaw/workspace:/workspace
+      - ./openclaw/canvas:/root/.openclaw/canvas/main
+      - openclaw-data:/root/.openclaw
+    ports:
+      - "18790:18790"
+    networks:
+      - business-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: openclaw gateway start
+
+volumes:
+  postgres-data:
+    driver: local
+  openclaw-data:
+    driver: local
+
+networks:
+  business-network:
+    driver: bridge
